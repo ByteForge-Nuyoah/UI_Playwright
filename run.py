@@ -66,6 +66,8 @@ def run(**kwargs):
         project_name = kwargs.get("project", "clue")
         # 指定测试路径：文件或目录
         custom_test_path = kwargs.get("path", "") or None
+        # 录制脚本运行模式：converted | raw | all
+        recording_mode = (kwargs.get("recording", "") or "converted").lower()
 
         # ------------------------ 动态加载项目配置 ------------------------
         # Load Project Configuration
@@ -82,6 +84,8 @@ def run(**kwargs):
                 
                 # 设定测试用例路径：projects/项目名/testcases
                 project_test_path = os.path.join(project_path, "testcases")
+                # 设定录制脚本路径：projects/项目名/playwrightScript
+                project_recordings_path = os.path.join(project_path, "playwrightScript")
 
                 # 加载项目特定的配置文件 project_settings.py
                 # 使用 importlib 动态导入模块，避免硬编码 import 语句
@@ -107,11 +111,19 @@ def run(**kwargs):
         # 如果命令行没有传递mode， 默认使用RunConfig.mode的值
         mode = kwargs.get("mode", "") or None
         RunConfig.mode = mode.lower() if mode else RunConfig.mode
+
+        # 如果命令行没有传递video， 默认使用RunConfig.video的值
+        video = kwargs.get("video", "") or None
+        RunConfig.video = video.lower() if video else RunConfig.video
+
         # ------------------------ 捕获日志----------------------------
         # ------------------------ 设置pytest相关参数 ------------------------
         arg_list = ["-vs", f"--maxfail={RunConfig.max_fail}", f"--reruns={RunConfig.rerun}",
                     f"--reruns-delay={RunConfig.reruns_delay}", f'--alluredir={ALLURE_RESULTS_DIR}',
                     '--clean-alluredir', f"--output={TRACING_DIR}"]
+
+        if RunConfig.video:
+             arg_list.append(f"--video={RunConfig.video}")
 
         if RunConfig.mode == "headed":
             arg_list.append("--headed")
@@ -131,8 +143,17 @@ def run(**kwargs):
         # Add test path
         if custom_test_path:
             arg_list.append(custom_test_path)
-        elif project_test_path:
-            arg_list.append(project_test_path)
+        else:
+            # 根据 recording_mode 选择测试来源
+            if recording_mode == "raw" and 'project_recordings_path' in locals():
+                arg_list.append(project_recordings_path)
+            elif recording_mode == "all" and 'project_recordings_path' in locals():
+                if project_test_path:
+                    arg_list.append(project_test_path)
+                arg_list.append(project_recordings_path)
+            else:
+                if project_test_path:
+                    arg_list.append(project_test_path)
 
         # ------------------------ 设置全局变量 ------------------------
         if not ENV_VARS:
@@ -203,6 +224,9 @@ if __name__ == '__main__':
     parser.add_argument("-scheduled", default="off", help="是否开启定时任务模式：on, off")
     parser.add_argument("-project", default="clue", help="指定运行的项目名称")
     parser.add_argument("-path", help="指定测试文件或目录路径")
+    parser.add_argument("-recording", default="converted",
+                        help="选择运行录制脚本模式：converted（默认）| raw | all")
+    parser.add_argument("-video", default="off", help="是否开启视频录制：on, off, retain-on-failure")
     args = parser.parse_args()
     run(**vars(args))
 

@@ -26,6 +26,9 @@ class RunConfig:
     # 运行模式（headless, headed）
     mode = "headed"
 
+    # 视频录制配置 (on, off, retain-on-failure)
+    video = "off"
+
     # 窗口大小配置
     """
     playwright 默认启动的浏览器窗口大小是 1280x720。
