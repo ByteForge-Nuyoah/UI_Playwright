@@ -1,6 +1,6 @@
 # UI Automation Framework (Playwright + Pytest)
 
-基于 **Playwright** + **Pytest** 的企业级 UI 自动化测试框架。支持多项目管理、多环境配置、数据驱动、Allure 可视化报告以及 CI/CD 流水线集成。
+基于 Playwright + Pytest的UI自动化测试框架。支持多项目管理、多环境配置、数据驱动、Allure 可视化报告以及 CI/CD 流水线集成。
 
 ## 一、核心特性
 
