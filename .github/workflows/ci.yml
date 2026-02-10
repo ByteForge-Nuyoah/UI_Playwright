@@ -41,7 +41,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Cache Playwright Browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Install Playwright browsers
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
         run: |
           python -m playwright install chromium --with-deps
 
@@ -50,6 +60,24 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Cache Allure
+        id: cache-allure
+        uses: actions/cache@v4
+        with:
+          path: ~/allure-2.27.0
+          key: ${{ runner.os }}-allure-2.27.0
+
+      - name: Install Allure Commandline
+        if: steps.cache-allure.outputs.cache-hit != 'true'
+        run: |
+          curl -o allure-2.27.0.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+          tar -zxvf allure-2.27.0.tgz -C ~
+
+      - name: Link Allure
+        run: |
+          sudo ln -sf ~/allure-2.27.0/bin/allure /usr/bin/allure
+          allure --version
 
       - name: Run tests (headless, test env)
         env:
@@ -68,7 +96,7 @@ jobs:
           # WeChat Work secret
           WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         run: |
-          python run.py -project clue -env ${{ github.event.inputs.env || 'test' }} -mode headless -browser chromium -report yes -scheduled on
+          python run.py -project clue -env ${{ github.event.inputs.env || 'test' }} -mode headless -browser chromium -report yes -scheduled on -video on
 
       - name: Upload Allure report
         if: always()
