@@ -57,7 +57,8 @@ class RunConfig:
 
 # ------------------------------------ 配置信息 ----------------------------------------------------#
 # 0表示默认不发送任何通知， 1 代表钉钉通知，2 代表企业微信通知， 3 代表邮件通知， 4 代表所有途径都发送通知
-SEND_RESULT_TYPE = int(os.getenv("SEND_RESULT_TYPE", 0))
+_send_result_type = os.getenv("SEND_RESULT_TYPE", "")
+SEND_RESULT_TYPE = int(_send_result_type) if _send_result_type and _send_result_type.isdigit() else 0
 
 # 指定日志收集级别和日志文件路径
 LOG_INFO = [
