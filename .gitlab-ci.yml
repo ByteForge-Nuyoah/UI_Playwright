@@ -1,0 +1,35 @@
+image: python:3.13-bookworm
+
+stages:
+  - test
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  ALLURE_VERSION: "2.32.0"
+
+test_job:
+  stage: test
+  before_script:
+    # Install Java (required for Allure)
+    - apt-get update && apt-get install -y default-jre wget
+    # Install Allure
+    - wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz
+    - tar -zxvf allure-${ALLURE_VERSION}.tgz
+    - mv allure-${ALLURE_VERSION} /opt/allure
+    - ln -s /opt/allure/bin/allure /usr/bin/allure
+    # Setup Python env
+    - pip install -r requirements.txt
+    - python -m playwright install chromium --with-deps
+  script:
+    - python run.py -project clue -env test -mode headless -browser chromium -scheduled on -report yes
+  artifacts:
+    when: always
+    paths:
+      - outputs/report/allure_html
+      - outputs/report/allure_results
+    expire_in: 1 week

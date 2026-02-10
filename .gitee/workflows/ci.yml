@@ -1,0 +1,40 @@
+name: UI Tests (Playwright + Pytest)
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install chromium --with-deps
+
+      - name: Run tests
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: 0
+        run: |
+          python run.py -project clue -env test -mode headless -browser chromium -scheduled on -report yes
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: outputs/report/allure_html

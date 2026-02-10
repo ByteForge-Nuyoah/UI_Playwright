@@ -1,0 +1,37 @@
+version: '1.0'
+name: ui-automation-pipeline
+displayName: UI Automation Pipeline
+triggers:
+  push:
+    branches:
+      - master
+      - main
+  pr:
+    branches:
+      - master
+      - main
+stages:
+  - name: test
+    displayName: Run Tests
+    strategy: naturally
+    steps:
+      - step: build@python
+        name: run_tests
+        displayName: Setup and Run Tests
+        pythonVersion: '3.9'
+        commands:
+          - pip install -r requirements.txt
+          - playwright install chromium
+          - python run.py -env test -mode headless -report yes -project clue
+        artifacts:
+          - name: allure-report
+            path:
+              - outputs/report/allure_html/
+        env:
+          EMAIL_USER: ${EMAIL_USER}
+          EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+          EMAIL_HOST: ${EMAIL_HOST}
+          EMAIL_TO: ${EMAIL_TO}
+          DINGTALK_WEBHOOK: ${DINGTALK_WEBHOOK}
+          DINGTALK_SECRET: ${DINGTALK_SECRET}
+          WECHAT_WEBHOOK: ${WECHAT_WEBHOOK}
